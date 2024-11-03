@@ -31,10 +31,6 @@ composer test
 
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details and a todolist.
 
-## Security
-
-If you discover any security related issues, please email `mimisk88@gmail.com` instead of using the issue tracker.
-
 ## Credits
 
 - [Mimis K][link-author]
