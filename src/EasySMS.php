@@ -32,9 +32,9 @@ class EasySMS
             ]);
 
             return json_decode($response->getBody(), true);
-
         } catch (\Exception $e) {
-            Log::error("EasySMS API Error: " . $e->getMessage());
+            Log::error('EasySMS API Error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -48,7 +48,7 @@ class EasySMS
     {
         return $this->request('POST', $this->mobileCheckUrl, [
             'mobile' => $mobile,
-            'type' => $type,
+            'type'   => $type,
         ]);
     }
 
@@ -57,7 +57,7 @@ class EasySMS
         $endpoint = $channel === 'viber' ? $this->viberUrl : $this->smsUrl;
 
         return $this->request('POST', $endpoint, [
-            'to' => $to,
+            'to'   => $to,
             'text' => $message,
         ]);
     }
