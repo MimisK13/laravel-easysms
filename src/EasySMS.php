@@ -7,65 +7,58 @@ use Illuminate\Support\Facades\Log;
 
 class EasySMS
 {
-    protected $client;
-    protected $apiKey;
-    protected $apiUrl;
+    protected Client $client;
+    protected mixed $apiKey;
+    protected mixed $smsUrl;
+    protected mixed $viberUrl;
+    private mixed $mobileCheckUrl;
+    private mixed $balanceUrl;
 
     public function __construct(array $config)
     {
         $this->apiKey = $config['api_key'];
-        $this->apiUrl = $config['api_url'] ?? 'https://easysms.gr/api/sms/send';
+        $this->smsUrl = $config['sms_url'];
+        $this->viberUrl = $config['viber_url'];
+        $this->mobileCheckUrl = $config['mobile_check_url'];
+        $this->balanceUrl = $config['balance_url'];
         $this->client = new Client();
     }
 
-    public function check($mobile, $type = 'json')
+    public function request($method, $endpoint, array $data = [])
     {
         try {
-            $response = $this->client->post($this->apiUrl, [
-                'form_params' => [
-                    'key' => $this->apiKey,
-                    'mobile' => $mobile,
-                    'type' => $type,
-                ],
+            $response = $this->client->request($method, $endpoint, [
+                'form_params' => array_merge(['key' => $this->apiKey, 'type' => 'json'], $data),
             ]);
 
-            $result = json_decode($response->getBody(), true);
-
-            if ($result['status'] == 1) {
-                return $result;
-            } else {
-                Log::error('EasySMS Error: ' . $result['remarks']);
-                return false;
-            }
+            return json_decode($response->getBody(), true);
 
         } catch (\Exception $e) {
-            Log::error('EasySMS Exception: ' . $e->getMessage());
+            Log::error("EasySMS API Error: " . $e->getMessage());
             return false;
         }
     }
 
-    public function send($to, $message)
+    public function getBalance()
     {
-        try {
-            $response = $this->client->post($this->apiUrl, [
-                'form_params' => [
-                    'key' => $this->apiKey,
-                    'to' => $to,
-                    'text' => $message,
-                ],
-            ]);
+        return $this->request('POST', $this->balanceUrl);
+    }
 
-            $result = json_decode($response->getBody(), true);
+    public function mobile($mobile, $type = 'json')
+    {
+        return $this->request('POST', $this->mobileCheckUrl, [
+            'mobile' => $mobile,
+            'type' => $type,
+        ]);
+    }
 
-            if ($result['status'] == 1) {
-                return $result;
-            } else {
-                Log::error('EasySMS Error: ' . $result['remarks']);
-                return false;
-            }
-        } catch (\Exception $e) {
-            Log::error('EasySMS Exception: ' . $e->getMessage());
-            return false;
-        }
+    public function send($to, $message, $channel = 'sms')
+    {
+        $endpoint = $channel === 'viber' ? $this->viberUrl : $this->smsUrl;
+
+        return $this->request('POST', $endpoint, [
+            'to' => $to,
+            'text' => $message,
+        ]);
     }
 }
